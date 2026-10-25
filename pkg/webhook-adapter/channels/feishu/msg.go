@@ -18,9 +18,10 @@ const (
 )
 
 type Msg struct {
-	// 开启签名验证后发送文本消息
-	// Timestamp time.Time `json:"timestamp,omitempty"`
-	// Sign      string    `json:"sign,omitempty"`
+	// Set when signature verification is enabled on the bot. Feishu expects
+	// timestamp as a string in the JSON body.
+	Timestamp string `json:"timestamp,omitempty"`
+	Sign      string `json:"sign,omitempty"`
 
 	MsgType string `json:"msg_type"`
 

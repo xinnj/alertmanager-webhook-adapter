@@ -17,16 +17,18 @@ func init() {
 }
 
 func createFeishuSender(request *restful.Request) (models.Sender, error) {
-	token := request.QueryParameter("token")
+	token := credentialFrom(request, "token", "FEISHU_TOKEN")
 	if token == "" {
 		return nil, fmt.Errorf("not token found for feishu channel")
 	}
+
+	secret := credentialFrom(request, "secret", "FEISHU_SECRET")
 
 	msgType := request.QueryParameter("msg_type")
 	if msgType == "" {
 		msgType = "markdown"
 	}
 
-	var sender models.Sender = feishu.NewSender(token, msgType)
+	var sender models.Sender = feishu.NewSenderWithSecret(token, msgType, secret)
 	return sender, nil
 }

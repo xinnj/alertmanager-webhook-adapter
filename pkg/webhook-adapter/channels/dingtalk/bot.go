@@ -7,7 +7,11 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
+	"strconv"
 	"time"
+
+	"github.com/bougou/alertmanager-webhook-adapter/pkg/webhook-adapter/utils"
 )
 
 // DingtalkBot can send messages to dingtalk group
@@ -15,19 +19,38 @@ import (
 type DingtalkGroupBot struct {
 	addr         string
 	access_token string
+	secret       string
 	client       *http.Client
 }
 
 func NewDingtalkGroupBot(access_token string) *DingtalkGroupBot {
+	return NewDingtalkGroupBotWithSecret(access_token, "")
+}
+
+func NewDingtalkGroupBotWithSecret(access_token string, secret string) *DingtalkGroupBot {
 	return &DingtalkGroupBot{
 		addr:         "https://oapi.dingtalk.com",
 		access_token: access_token,
+		secret:       secret,
 		client:       &http.Client{},
 	}
 }
 
 func (bot *DingtalkGroupBot) Addr() string {
-	return fmt.Sprintf("%s/robot/send?access_token=%s", bot.addr, bot.access_token)
+	if bot.secret == "" {
+		return fmt.Sprintf("%s/robot/send?access_token=%s", bot.addr, bot.access_token)
+	}
+
+	timestamp := time.Now().UnixMilli()
+	// GenSign cannot fail for well-formed inputs; the error return only mirrors
+	// the Feishu helper. Never fall back to an unsigned URL on error.
+	sign, _ := GenSign(bot.secret, timestamp)
+
+	q := url.Values{}
+	q.Set("access_token", bot.access_token)
+	q.Set("timestamp", strconv.FormatInt(timestamp, 10))
+	q.Set("sign", sign)
+	return fmt.Sprintf("%s/robot/send?%s", bot.addr, q.Encode())
 }
 
 func (bot *DingtalkGroupBot) AddrForUpload() string {
@@ -47,12 +70,33 @@ func (bot *DingtalkGroupBot) Send(msg *Msg) error {
 
 	res, err := bot.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("send msg error, %v", err)
+		return fmt.Errorf("send msg error, %v", utils.SanitizeRequestError(err))
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
 		return fmt.Errorf("send msg response error, status: %d", res.StatusCode)
+	}
+
+	// DingTalk returns HTTP 200 with a non-zero errcode for rejected requests
+	// (invalid token, bad signature, stale timestamp, ...).
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return fmt.Errorf("read response body failed: %v", err)
+	}
+	if len(bytes.TrimSpace(body)) == 0 {
+		return nil
+	}
+
+	var result struct {
+		ErrCode int    `json:"errcode"`
+		ErrMsg  string `json:"errmsg"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return fmt.Errorf("unexpected response body from dingtalk (status %d)", res.StatusCode)
+	}
+	if result.ErrCode != 0 {
+		return fmt.Errorf("dingtalk send failed: errcode=%d errmsg=%s", result.ErrCode, result.ErrMsg)
 	}
 
 	return nil
@@ -79,7 +123,7 @@ func (bot *DingtalkGroupBot) UploadFile(filename string, fileReader io.Reader) (
 
 	res, err := bot.client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("send error, %v", err)
+		return "", fmt.Errorf("send error, %v", utils.SanitizeRequestError(err))
 	}
 	defer res.Body.Close()
 

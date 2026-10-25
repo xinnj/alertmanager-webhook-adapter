@@ -14,12 +14,16 @@ type Sender struct {
 var _ models.Sender = (*Sender)(nil)
 
 func NewSender(token string, msgType string) models.Sender {
+	return NewSenderWithSecret(token, msgType, "")
+}
+
+func NewSenderWithSecret(token string, msgType string, secret string) models.Sender {
 	if msgType == "" {
 		msgType = MsgTypeMarkdown
 	}
 
 	return &Sender{
-		bot:     NewFeishuGroupBot(token),
+		bot:     NewFeishuGroupBotWithSecret(token, secret),
 		msgType: msgType,
 	}
 }

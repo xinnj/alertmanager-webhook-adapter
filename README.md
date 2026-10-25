@@ -57,6 +57,30 @@ A general webhook server for receiving [Prometheus AlertManager](https://prometh
 
 > More is comming...
 
+### Optional signing
+
+`dingtalk` and `feishu` support signed requests. Signing is enabled only when a
+secret is provided; without one, requests are unchanged.
+
+Credentials may be passed as query parameters or, when absent, read from
+environment variables:
+
+| Channel  | Token query / env          | Secret query / env         |
+|----------|----------------------------|----------------------------|
+| dingtalk | `token` / `DINGTALK_TOKEN` | `secret` / `DINGTALK_SECRET` |
+| feishu   | `token` / `FEISHU_TOKEN`   | `secret` / `FEISHU_SECRET`   |
+
+Using environment variables keeps credentials out of Alertmanager receiver
+URLs:
+
+```bash
+$ DINGTALK_TOKEN=xxx DINGTALK_SECRET=xxx ./alertmanager-webhook-adapter
+```
+
+DingTalk appends `timestamp` (milliseconds) and `sign` to the request URL;
+Feishu adds `timestamp` (seconds) and `sign` to the JSON body. Debug logs redact
+`token` and `secret` values.
+
 ## Run
 
 ### Build and Run

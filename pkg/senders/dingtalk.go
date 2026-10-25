@@ -17,16 +17,18 @@ func init() {
 }
 
 func createDingtalkSender(request *restful.Request) (models.Sender, error) {
-	token := request.QueryParameter("token")
+	token := credentialFrom(request, "token", "DINGTALK_TOKEN")
 	if token == "" {
 		return nil, fmt.Errorf("not token found for dingtalk channel")
 	}
+
+	secret := credentialFrom(request, "secret", "DINGTALK_SECRET")
 
 	msgType := request.QueryParameter("msg_type")
 	if msgType == "" {
 		msgType = "markdown"
 	}
 
-	var sender models.Sender = dingtalk.NewSender(token, msgType)
+	var sender models.Sender = dingtalk.NewSenderWithSecret(token, msgType, secret)
 	return sender, nil
 }

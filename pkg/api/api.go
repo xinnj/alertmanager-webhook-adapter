@@ -62,7 +62,7 @@ func (c *Controller) log(a ...any) error {
 }
 
 func (c *Controller) send(request *restful.Request, response *restful.Response) {
-	c.logf("Got request : %s\n", request.Request.URL.String())
+	c.logf("Got request : %s\n", redactURL(request.Request.URL))
 
 	raw, err := io.ReadAll(request.Request.Body)
 	if err != nil {
@@ -128,6 +128,6 @@ func (c *Controller) send(request *restful.Request, response *restful.Response) 
 		return
 	}
 
-	c.logf("Send succeed: %s\n", request.Request.URL.String())
+	c.logf("Send succeed: %s\n", redactURL(request.Request.URL))
 	response.WriteHeader(http.StatusNoContent)
 }

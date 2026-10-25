@@ -10,6 +10,10 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/bougou/alertmanager-webhook-adapter/pkg/webhook-adapter/utils"
 )
 
 // FeishuBot can send messages to feishu group
@@ -17,13 +21,19 @@ import (
 type FeishuGroupBot struct {
 	addr   string
 	token  string
+	secret string
 	client *http.Client
 }
 
 func NewFeishuGroupBot(token string) *FeishuGroupBot {
+	return NewFeishuGroupBotWithSecret(token, "")
+}
+
+func NewFeishuGroupBotWithSecret(token string, secret string) *FeishuGroupBot {
 	return &FeishuGroupBot{
 		addr:   "https://open.feishu.cn",
 		token:  token,
+		secret: secret,
 		client: &http.Client{},
 	}
 }
@@ -50,6 +60,16 @@ func (bot *FeishuGroupBot) AddrForDownloadFile(fileKey string) string {
 }
 
 func (bot *FeishuGroupBot) Send(msg *Msg) error {
+	if bot.secret != "" {
+		timestamp := time.Now().Unix()
+		sign, err := GenSign(bot.secret, timestamp)
+		if err != nil {
+			return err
+		}
+		msg.Timestamp = strconv.FormatInt(timestamp, 10)
+		msg.Sign = sign
+	}
+
 	msgBytes, err := json.Marshal(msg)
 	if err != nil {
 		return err
@@ -62,12 +82,33 @@ func (bot *FeishuGroupBot) Send(msg *Msg) error {
 
 	res, err := bot.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("send msg error, %v", err)
+		return fmt.Errorf("send msg error, %v", utils.SanitizeRequestError(err))
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
 		return fmt.Errorf("send msg response error, status: %d", res.StatusCode)
+	}
+
+	// Feishu returns HTTP 200 with a non-zero code for rejected requests
+	// (invalid token, bad signature, stale timestamp, ...).
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return fmt.Errorf("read response body failed: %v", err)
+	}
+	if len(bytes.TrimSpace(body)) == 0 {
+		return nil
+	}
+
+	var result struct {
+		Code int    `json:"code"`
+		Msg  string `json:"msg"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return fmt.Errorf("unexpected response body from feishu (status %d)", res.StatusCode)
+	}
+	if result.Code != 0 {
+		return fmt.Errorf("feishu send failed: code=%d msg=%s", result.Code, result.Msg)
 	}
 
 	return nil
@@ -113,7 +154,7 @@ func (bot *FeishuGroupBot) UploadImage(filename string, fileReader io.Reader) (i
 
 	res, err := bot.client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("send error, %v", err)
+		return "", fmt.Errorf("send error, %v", utils.SanitizeRequestError(err))
 	}
 	defer res.Body.Close()
 
@@ -152,7 +193,7 @@ func (bot *FeishuGroupBot) FetchImage(imageKey string) ([]byte, error) {
 
 	res, err := bot.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("fetch error, %v", err)
+		return nil, fmt.Errorf("fetch error, %v", utils.SanitizeRequestError(err))
 	}
 	defer res.Body.Close()
 
@@ -210,7 +251,7 @@ func (bot *FeishuGroupBot) UploadFile(filename string, filetype string, fileRead
 
 	res, err := bot.client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("send error, %v", err)
+		return "", fmt.Errorf("send error, %v", utils.SanitizeRequestError(err))
 	}
 	defer res.Body.Close()
 
@@ -244,7 +285,7 @@ func (bot *FeishuGroupBot) DownloadFile(fileKey string) ([]byte, error) {
 
 	res, err := bot.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("fetch error, %v", err)
+		return nil, fmt.Errorf("fetch error, %v", utils.SanitizeRequestError(err))
 	}
 	defer res.Body.Close()
 
