@@ -11,7 +11,7 @@ replicaCount: 1
 ## @param image.pullPolicy Container image pull policy
 ## @param image.pullSecrets Container registry pull secrets
 image:
-  repository: bougou/alertmanager-webhook-adapter
+  repository: xinnj/alertmanager-webhook-adapter
   tag: ""
   pullPolicy: IfNotPresent
   pullSecrets: []

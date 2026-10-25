@@ -68,7 +68,7 @@ Create the namespace to deploy into.
 Return the proper image repository.
 */}}
 {{- define "awa.image.repository" -}}
-{{- .Values.image.repository | default .Values.image.name | default "bougou/alertmanager-webhook-adapter" }}
+{{- .Values.image.repository | default .Values.image.name | default "xinnj/alertmanager-webhook-adapter" }}
 {{- end }}
 
 {{/*
