@@ -83,6 +83,16 @@ func (c *Controller) send(request *restful.Request, response *restful.Response) 
 	}
 	promMsg.SetMessageAt().SetSignature(c.signature)
 
+	// An Alertmanager webhook always carries at least one alert. Rejecting an
+	// empty list here keeps malformed or probing requests from producing a
+	// blank notification in the group.
+	if len(promMsg.Alerts) == 0 {
+		errmsg := "Err: no alerts found in payload, nothing to send"
+		c.log(errmsg)
+		response.WriteHeaderAndJson(http.StatusBadRequest, errmsg, restful.MIME_JSON)
+		return
+	}
+
 	channelType := request.QueryParameter("channel_type")
 	if channelType == "" {
 		errmsg := "Err: no channel_type found"
