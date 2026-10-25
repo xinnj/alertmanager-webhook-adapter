@@ -17,7 +17,7 @@ func init() {
 }
 
 func createWeixinSender(request *restful.Request) (models.Sender, error) {
-	token := request.QueryParameter("token")
+	token := credentialFrom(request, "token", "WEIXIN_TOKEN")
 	if token == "" {
 		return nil, fmt.Errorf("not token found for weixin channel")
 	}

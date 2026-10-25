@@ -8,6 +8,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	"time"
+
+	"github.com/bougou/alertmanager-webhook-adapter/pkg/webhook-adapter/utils"
 )
 
 // WexinGroupBot can send messages to weixin group
@@ -48,7 +50,7 @@ func (bot *WeixinGroupBot) Send(msg *Msg) error {
 
 	res, err := bot.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("send msg error, %v", err)
+		return fmt.Errorf("send msg error, %v", utils.SanitizeRequestError(err))
 	}
 	defer res.Body.Close()
 
@@ -72,7 +74,8 @@ func (bot *WeixinGroupBot) Send(msg *Msg) error {
 	}
 
 	if botRes.Errcode != 0 {
-		return fmt.Errorf("found err in response, request url: (%s), response: %s", bot.Addr(), string(resBody))
+		// Never include bot.Addr() here: the webhook URL carries the key.
+		return fmt.Errorf("weixin send failed: errcode=%d errmsg=%s", botRes.Errcode, botRes.Errmsg)
 	}
 
 	return nil
