@@ -1,6 +1,9 @@
 package models
 
-import "sort"
+import (
+	"sort"
+	"strings"
+)
 
 // Pair is a key/value string pair.
 type Pair struct {
@@ -78,4 +81,62 @@ func (kv KV) Names() []string {
 // Values returns a list of the values in the LabelSet.
 func (kv KV) Values() []string {
 	return kv.SortedPairs().Values()
+}
+
+// hiddenExtraLabels are omitted from the free-form extra label section. They
+// are either already rendered as dedicated notification fields, duplicate
+// annotation text, or Prometheus scrape/operator plumbing.
+var hiddenExtraLabels = []string{
+	"alertname", "alertname_cn", "alertname_custom",
+	"severity",
+	"alertinstance", "instance", "node", "nodename", "host", "hostname", "ip",
+	"region", "zone", "product", "component",
+	"description", "summary",
+	"job", "endpoint", "prometheus", "prometheus_replica", "service",
+}
+
+// nodeScopedExtraLabels are meaningful for workload alerts but are scrape
+// target metadata for node-scoped alerts.
+var nodeScopedExtraLabels = []string{"namespace", "pod", "container"}
+
+// Extra returns the labels worth rendering as free-form extra fields. Labels
+// already shown as dedicated fields, annotation duplicates, and Prometheus
+// scrape plumbing are omitted. Node-scoped alerts also omit workload identity
+// labels.
+func (kv KV) Extra() Pairs {
+	hidden := make([]string, 0, len(hiddenExtraLabels)+len(nodeScopedExtraLabels)+1)
+	hidden = append(hidden, hiddenExtraLabels...)
+	if kv.isNodeScoped() {
+		hidden = append(hidden, nodeScopedExtraLabels...)
+	}
+	// __alertinstance falls back to app, then cluster, then the alert name,
+	// so the chosen fallback would otherwise be rendered twice.
+	if !kv.hasInstanceLabel() {
+		if kv["app"] != "" {
+			hidden = append(hidden, "app")
+		} else if kv["cluster"] != "" {
+			hidden = append(hidden, "cluster")
+		}
+	}
+	return kv.Remove(hidden).SortedPairs()
+}
+
+// isNodeScoped reports whether the alert describes a node rather than a
+// workload. A node label alone is not enough: kube-state-metrics adds it to
+// many workload alerts.
+func (kv KV) isNodeScoped() bool {
+	return strings.HasPrefix(kv["alertname"], "Node") ||
+		kv["device"] != "" ||
+		kv["mountpoint"] != ""
+}
+
+// hasInstanceLabel reports whether __alertinstance would pick one of its
+// preferred labels before falling back to app.
+func (kv KV) hasInstanceLabel() bool {
+	for _, name := range []string{"alertinstance", "instance", "node", "nodename", "host", "hostname", "ip"} {
+		if kv[name] != "" {
+			return true
+		}
+	}
+	return false
 }

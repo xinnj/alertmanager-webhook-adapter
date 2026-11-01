@@ -24,14 +24,7 @@
 {{- end }}
 
 {{ define "__alertinstance" -}}
-{{- if .Labels.alertinstance }}{{ .Labels.alertinstance }}
-{{- else if .Labels.instance }}{{ .Labels.instance }}
-{{- else if .Labels.node }}{{ .Labels.node }}
-{{- else if .Labels.nodename }}{{ .Labels.nodename }}
-{{- else if .Labels.host }}{{ .Labels.host }}
-{{- else if .Labels.hostname }}{{ .Labels.hostname }}
-{{- else if .Labels.ip }}{{ .Labels.ip }}
-{{- end -}}
+{{- .Instance -}}
 {{- end }}
 
 {{ define "__alert_list" }}
@@ -69,7 +62,7 @@
 > 结束: {{ if .EndsAt.After .StartsAt }}{{ .EndsAt.Format "2006-01-02T15:04:05-07" }}{{ else }}Not End{{ end }}
 {{- if eq .Status "firing" }}
 >
-> 告警描述: {{ .Annotations.description }}
+> 告警描述: {{ .Annotations.description | trimTrailingSpace }}
 {{- end }}
 
 {{ end }}

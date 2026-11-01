@@ -32,7 +32,7 @@ func loadWebhookJSON(t *testing.T, rel string) *AlertmanagerWebhookMessage {
 	return &msg
 }
 
-func renderFeishuTmpl(t *testing.T, src string, msg *AlertmanagerWebhookMessage, name string) string {
+func renderFeishuTmpl(t *testing.T, src string, data any, name string) string {
 	t.Helper()
 	tmpl, err := template.New("prom").
 		Funcs(defaultFuncs).
@@ -42,7 +42,7 @@ func renderFeishuTmpl(t *testing.T, src string, msg *AlertmanagerWebhookMessage,
 		t.Fatal(err)
 	}
 	var buf strings.Builder
-	if err := tmpl.ExecuteTemplate(&buf, name, msg); err != nil {
+	if err := tmpl.ExecuteTemplate(&buf, name, data); err != nil {
 		t.Fatal(err)
 	}
 	return buf.String()

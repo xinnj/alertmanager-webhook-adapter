@@ -39,6 +39,10 @@ MARKDOWN:
 **开始**: <text_tag color='neutral'>2021-03-30 20:17:50 +08</text_tag>
 **结束**: <text_tag color='neutral'>未结束</text_tag>
 **告警描述**: cpu usage is high than 20% for 5 minutes
+**alertgroup**: <text_tag color='neutral'>Linux</text_tag>
+**cpu**: <text_tag color='neutral'>cpu-total</text_tag>
+**db**: <text_tag color='neutral'>telegraf</text_tag>
+**vmalert**: <text_tag color='neutral'>10.30.12.22</text_tag>
 
 
 - **告警实例**: <text_tag color='purple'>10.30.1.162</text_tag>
@@ -52,6 +56,10 @@ MARKDOWN:
 **开始**: <text_tag color='neutral'>2021-03-30 20:17:50 +08</text_tag>
 **结束**: <text_tag color='neutral'>未结束</text_tag>
 **告警描述**: cpu usage is high than 20% for 5 minutes
+**alertgroup**: <text_tag color='neutral'>Linux</text_tag>
+**cpu**: <text_tag color='neutral'>cpu-total</text_tag>
+**db**: <text_tag color='neutral'>telegraf</text_tag>
+**vmalert**: <text_tag color='neutral'>10.30.12.22</text_tag>
 
 
 - **告警实例**: <text_tag color='purple'>10.30.1.163</text_tag>
@@ -65,6 +73,10 @@ MARKDOWN:
 **开始**: <text_tag color='neutral'>2021-03-30 20:17:50 +08</text_tag>
 **结束**: <text_tag color='neutral'>未结束</text_tag>
 **告警描述**: cpu usage is high than 20% for 5 minutes
+**alertgroup**: <text_tag color='neutral'>Linux</text_tag>
+**cpu**: <text_tag color='neutral'>cpu-total</text_tag>
+**db**: <text_tag color='neutral'>telegraf</text_tag>
+**vmalert**: <text_tag color='neutral'>10.30.12.22</text_tag>
 
 
 <font color='green'>✅ 已恢复告警 [2]</font>
@@ -80,6 +92,10 @@ MARKDOWN:
 **告警状态**: ✅ <text_tag color='green'>RESOLVED</text_tag>
 **开始**: <text_tag color='neutral'>2021-03-30 20:17:50 +08</text_tag>
 **结束**: <text_tag color='neutral'>2021-03-30 21:17:50 +08</text_tag>
+**alertgroup**: <text_tag color='neutral'>Linux</text_tag>
+**cpu**: <text_tag color='neutral'>cpu-total</text_tag>
+**db**: <text_tag color='neutral'>telegraf</text_tag>
+**vmalert**: <text_tag color='neutral'>10.30.12.22</text_tag>
 
 
 - **告警实例**: <text_tag color='purple'>10.30.1.164</text_tag>
@@ -92,3 +108,7 @@ MARKDOWN:
 **告警状态**: ✅ <text_tag color='green'>RESOLVED</text_tag>
 **开始**: <text_tag color='neutral'>2021-03-30 20:17:50 +08</text_tag>
 **结束**: <text_tag color='neutral'>2021-03-30 21:17:50 +08</text_tag>
+**alertgroup**: <text_tag color='neutral'>Linux</text_tag>
+**cpu**: <text_tag color='neutral'>cpu-total</text_tag>
+**db**: <text_tag color='neutral'>telegraf</text_tag>
+**vmalert**: <text_tag color='neutral'>10.30.12.22</text_tag>

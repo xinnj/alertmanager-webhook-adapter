@@ -25,10 +25,11 @@ var (
 	promMsgTemplatesMap = make(map[string]*safeTemplate)
 
 	defaultFuncs = map[string]interface{}{
-		"toUpper":  strings.ToUpper,
-		"toLower":  strings.ToLower,
-		"title":    cases.Title,
-		"markdown": markdownEscapeString,
+		"toUpper":           strings.ToUpper,
+		"toLower":           strings.ToLower,
+		"title":             cases.Title,
+		"markdown":          markdownEscapeString,
+		"trimTrailingSpace": trimTrailingSpace,
 	}
 	isMarkdownSpecial [128]bool
 )
@@ -188,6 +189,12 @@ func markdownEscapeString(s string) string {
 		buf.WriteRune(c)
 	}
 	return buf.String()
+}
+
+// trimTrailingSpace removes trailing whitespace without disturbing leading
+// indentation that may be meaningful in a description.
+func trimTrailingSpace(s string) string {
+	return strings.TrimRight(s, " \t\r\n")
 }
 
 func ExecuteTextString(text string, data interface{}) (string, error) {

@@ -67,6 +67,36 @@ type Alert struct {
 	GeneratorURL string    `json:"generatorURL"`
 }
 
+// AlertName returns the display name for the alert, preferring localized and
+// custom labels and the alertname annotation over the raw alertname label.
+func (a Alert) AlertName() string {
+	if v := a.Labels["alertname_cn"]; v != "" {
+		return v
+	}
+	if v := a.Labels["alertname_custom"]; v != "" {
+		return v
+	}
+	if v := a.Annotations["alertname"]; v != "" {
+		return v
+	}
+	return a.Labels["alertname"]
+}
+
+// Instance returns the best identifier for the alert. Cluster-level alerts
+// have no instance label, so they fall back to the cluster or alert name
+// instead of rendering an empty field.
+func (a Alert) Instance() string {
+	for _, name := range []string{
+		"alertinstance", "instance", "node", "nodename",
+		"host", "hostname", "ip", "app", "cluster",
+	} {
+		if v := a.Labels[name]; v != "" {
+			return v
+		}
+	}
+	return a.AlertName()
+}
+
 // Firing returns the subset of alerts that are firing.
 func (as Alerts) Firing() []Alert {
 	res := []Alert{}

@@ -25,22 +25,11 @@
 {{- end }}
 
 {{ define "__alert_alertname" -}}
-{{- if .Labels.alertname_cn }}{{ .Labels.alertname_cn }}
-{{- else if .Labels.alertname_custom }}{{ .Labels.alertname_custom }}
-{{- else if .Annotations.alertname }}{{ .Annotations.alertname }}
-{{- else }}{{ .Labels.alertname }}
-{{- end -}}
+{{- .AlertName -}}
 {{- end }}
 
 {{ define "__alertinstance" -}}
-{{- if .Labels.alertinstance }}{{ .Labels.alertinstance }}
-{{- else if .Labels.instance }}{{ .Labels.instance }}
-{{- else if .Labels.node }}{{ .Labels.node }}
-{{- else if .Labels.nodename }}{{ .Labels.nodename }}
-{{- else if .Labels.host }}{{ .Labels.host }}
-{{- else if .Labels.hostname }}{{ .Labels.hostname }}
-{{- else if .Labels.ip }}{{ .Labels.ip }}
-{{- end -}}
+{{- .Instance -}}
 {{- end }}
 
 {{ define "__severity_tag" -}}
@@ -64,8 +53,8 @@
 {{- end }}
 
 {{ define "__alert_description" -}}
-{{- if .Annotations.description_en }}{{ .Annotations.description_en }}
-{{- else }}{{ .Annotations.description }}
+{{- if .Annotations.description_en }}{{ .Annotations.description_en | trimTrailingSpace }}
+{{- else }}{{ .Annotations.description | trimTrailingSpace }}
 {{- end -}}
 {{- end }}
 
@@ -75,6 +64,12 @@
 
 {{ define "__resolved_title" -}}
 ##### ✅ <font color="info">Resolved Alerts [{{ len . }}]</font>
+{{- end }}
+
+{{ define "__alert_labels" -}}
+{{- range .Labels.Extra }}
+> <font color="comment">{{ .Name }}</font>: {{ .Value | trimTrailingSpace }}
+{{- end -}}
 {{- end }}
 
 {{ define "__alert_list" -}}
@@ -104,6 +99,7 @@
 {{- if eq .Status "firing" }}
 > <font color="comment">Description</font>: {{ template "__alert_description" . }}
 {{- end -}}
+{{ template "__alert_labels" . }}
 {{- end -}}
 {{- end }}
 
